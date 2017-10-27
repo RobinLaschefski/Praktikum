@@ -45,6 +45,24 @@
 			//color:#B2B2B2;
 			color:#E6E6E6;
 		}
+		.minesweeper .x_marked {
+			background: #FF6000;
+			//color:#B2B2B2;
+			color:##FF6000;
+		}
+		.minesweeper .bombe_aufgedeckt_marked {
+			background: #FF6000;
+			color:#FF6000;
+		}
+		.minesweeper .aufgedeckt_marked {
+			background: #FF6000;
+			color:#FF6000;
+		}
+		.minesweeper .zugedeckt_marked {
+			background: #FF6000;
+			//color:#B2B2B2;
+			color:#FF6000;
+		}
 
 		/*..minesweeper table:not(.gameover) .o,
 		.minesweeper table:not(.gameover) .x {
@@ -58,15 +76,22 @@
 			content: "\1F4A3";
 			top: -0.125em;
 		}
-
+*/
 		.minesweeper .bombe_aufgedeckt::after {
 			font-size: 5em;
-			position: absolute;
+/*			position: absolute;	*/
 			width: 100%;
 			content: "\1F4A3";
 			top: -0.125em;
 		}
-
+		.minesweeper .bombe_aufgedeckt_marked::after {
+			font-size: 5em;
+/*			position: absolute;	*/
+			width: 100%;
+			content: "\1F4A3";
+			top: -0.125em;
+		}
+/*
 		.minesweeper .o::after {
 			content: "o";
 			top: -0.2em;
@@ -212,9 +237,7 @@
 					{
 						// felder um felder mit der zahl 0 aufdecken (wenn aufgedeckte felder die zahl 0 haben von diesem feld aus wiederholen)
 
-						var tds = field.getElementsByTagName("td");
 						idx = NX * y + x;
-						var td = tds[idx];
 
 						console.log ( x + " " + y + " " + idx)
 						if (x < 0 || y < 0 || x >= NX || y >= NY) 
@@ -223,7 +246,9 @@
 						}
 						else
 						{
-							if (td.className != "x" && td.className != "aufgedeckt") 
+							var tds = field.getElementsByTagName("td");
+							var td = tds[idx];
+							if (td.className != "x" && td.className != "aufgedeckt" && !td.className.endsWith("_marked")) 
 							{
 								td.className = "aufgedeckt";
 
@@ -238,7 +263,8 @@
 									aufdecken(x+1, y+1);
 									aufdecken(x+1, y-1);
 									aufdecken(x-1, y+1);
-									aufdecken(x-1, y-1);			
+									aufdecken(x-1, y-1);		
+									td.innerHTML = "";	
 									
 
 								}
@@ -261,38 +287,72 @@
 						var tds = field.getElementsByTagName("td");
 						
 						var td_clicked = event.target;
-						while(td_clicked.tagName.toLowerCase() != "td" && td_clicked != field)
+						if( !td_clicked.className.endsWith("_marked") )
 						{
-							td_clicked = td_clicked.parentNode;
-						}
-
-						
-						outerloop:
-						for (var y = 0; y < NY; y++)
-						{
-							for (var x = 0; x < NX; x++)
+							while(td_clicked.tagName.toLowerCase() != "td" && td_clicked != field)
 							{
-								idx = NX * y + x;
-								if( tds[idx] == td_clicked )
+								td_clicked = td_clicked.parentNode;
+							}
+
+							
+							outerloop:
+							for (var y = 0; y < NY; y++)
+							{
+								for (var x = 0; x < NX; x++)
 								{
-									aufdecken( x, y );	
-									if (td_clicked.className == "x") 
+									idx = NX * y + x;
+									if( tds[idx] == td_clicked )
 									{
-										do_gameover();
+										aufdecken( x, y );	
+										if (td_clicked.className == "x") 
+										{
+											do_gameover();
+										}
+										break outerloop;
 									}
-									break outerloop;
 								}
 							}
-						}
 							
-						
+						}
 
 					}
 
 					function rightclick(event)
 					{
 						console.log("rightclick!");
-						
+						if(gameover) return;
+						var tds = field.getElementsByTagName("td");
+						var td_clicked = event.target;
+						if (td_clicked.className != "aufgedeckt")
+						{
+							while(td_clicked.tagName.toLowerCase() != "td" && td_clicked != field)
+							{
+								td_clicked = td_clicked.parentNode;
+							}
+
+							
+							outerloop:
+							for (var y = 0; y < NY; y++)
+							{
+								for (var x = 0; x < NX; x++)
+								{
+									idx = NX * y + x;
+									td_clicked.innerHTML = "";
+									s = td_clicked.className;
+									if(s.endsWith("_marked") )
+									{
+										console.log("rightclick1");
+										td_clicked.className = s.substring(0, s.length-7);
+									}
+									else
+									{
+										console.log("rightclick2");
+										td_clicked.className = s + "_marked";
+									}
+									break outerloop;
+								}
+							}
+						}
 					}
 
 					var buttons;
