@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="de">
+<head>
+	<header>
+	<h1>Minesweeper</h1>
+	</header>
+	<style type="text/css">
+		.minesweeper table {
+			border: 3px solid blue;
+			border-collapse: collapse;
+		}
+		.minesweeper td {
+  			border: 1px solid black;
+ 			height: 5em;
+			position: relative;
+			text-align: center;
+			width: 5em;
+		}
+		.minesweeper table:not(.gameover) td {
+			cursor: pointer;
+		}
+		.minesweeper button {
+			right: -150vw;
+			position: absolute;
+		}
+		.minesweeper .o {
+			background: #086D00;
+			color:#086D00;
+		}
+		.minesweeper .x {
+			background: #E6E6E6;
+			//color:#B2B2B2;
+			color:#E6E6E6;
+		}
+		.minesweeper .bombe_aufgedeckt {
+			background: #E6E6E6;
+			color:#B20000;
+		}
+		.minesweeper .aufgedeckt {
+			background: #E6E6E6;
+			color:#B20000;
+		}
+		.minesweeper .zugedeckt {
+			background: #E6E6E6;
+			//color:#B2B2B2;
+			color:#E6E6E6;
+		}
+
+		/*..minesweeper table:not(.gameover) .o,
+		.minesweeper table:not(.gameover) .x {
+			z-index: -1;
+		}
+
+		minesweeper .x::after {
+			font-size: 5em;
+			position: absolute;
+			width: 100%;
+			content: "\1F4A3";
+			top: -0.125em;
+		}
+
+		.minesweeper .bombe_aufgedeckt::after {
+			font-size: 5em;
+			position: absolute;
+			width: 100%;
+			content: "\1F4A3";
+			top: -0.125em;
+		}
+
+		.minesweeper .o::after {
+			content: "o";
+			top: -0.2em;
+		}
+
+		.minesweeper .o.highlighted::after,
+		.minesweeper .x.highlighted::after {
+			color: white;
+		}*/
+
+		.minesweeper .gameover {
+			border-color: red;
+		}
+
+
+		.restart_button button {
+			border: 3px solid blue;
+		}
+		
+		.restart_button {
+			color:#086D00;
+		}
+	</style>
+
+	<script type="text/javascript">
+		document.addEventListener(
+			"DOMContentLoaded",
+			function()
+			{
+				console.log("called DOMContentLoaded");
+				var games, i, finished = false, gameover = false,
+					counter = 0;
+				function Minesweeper (element)
+				{
+
+					console.log("called Minesweeper");
+					var field = document.createElement("table"),
+						caption = document.createElement("caption"),
+						NX = 10, NY = 10,
+						bomben_anzahl = Math.round((NY * NX) / 5.5),
+						num_anzahl = NX * NY - bomben_anzahl,
+					b, r, c, tr, bomb, num;
+					element.appendChild(field);
+					field.appendChild(caption);
+					field.appendChild(document.createElement("tbody"));
+										
+					for (r = 0; r < NY; r++)
+					{
+						tr = document.createElement("tr");
+						field.lastChild.appendChild(tr);
+						for (c = 0; c < NX; c++)
+						{
+							tr.appendChild(document.createElement("td"));
+							b = document.createElement("button");
+							tr.lastChild.appendChild(b);
+						}
+					}
+
+					function bomben_setzen ()
+					{
+						var min = 0;
+							max = NX * NY - 1;
+							Zufallszahl = Math.floor(Math.random() * (max - min + 1)) + min;
+
+						var tds = field.getElementsByTagName("td");
+						while (tds[Zufallszahl].className != "" ) 
+						{
+							Zufallszahl = Math.floor(Math.random() * (max - min + 1)) + min;
+						}
+							
+						console.log("Zufallszahl " + Zufallszahl);
+						tds[Zufallszahl].className = "x";
+						tds[Zufallszahl].innerHTML = "&#128163;";
+					}
+
+					function set_num (x,y)
+					{
+						var tds = field.getElementsByTagName("td");
+						idx = NX * y + x;
+						
+						var td = tds[idx];
+						if (td.className == "")
+						{
+							td.innerHTML = get_bombs_inNeighborhood (x,y);
+							//td.className = "aufgedeckt" //td.innerHTML
+							td.className = "zugedeckt" //td.innerHTML
+						}
+					}
+
+					for (var bomb = 0; bomb < bomben_anzahl; bomb++)
+					{
+						bomben_setzen();
+					}
+					for (var y = 0; y < NY; y++)
+					{
+						for (var x = 0; x < NX; x++)
+						{
+							set_num(x,y);
+						}
+					}
+					function get_bomb (x,y)
+					{
+						if (x < 0 || y < 0 || x >= NX || y >= NY) 
+						{
+							return 0;
+						}
+						else 
+						{
+
+							var tds = field.getElementsByTagName("td");
+							idx = NX * y + x;							
+							var td = tds[idx];
+							if ( td.className == "x" )
+							{
+								return 1;
+							} 
+							else 
+							{
+								return 0;
+							}
+						}
+					}
+					function get_bombs_inNeighborhood (x,y)
+					{
+						
+							return get_bomb (x + 1,y) + get_bomb (x,y + 1) + get_bomb (x - 1,y) + get_bomb (x,y - 1) + get_bomb (x + 1,y + 1) + get_bomb (x + 1,y - 1) + get_bomb (x - 1,y + 1) + get_bomb (x - 1,y - 1);
+
+					}
+					function do_gameover()					
+					{
+						gameover = true;
+						var tds = field.getElementsByTagName("td");
+						for (var i = tds.length - 1; i >= 0; i--) {
+							td = tds[i];
+							if (td.className == "x") 
+							{
+								td.className = "bombe_aufgedeckt"
+							}
+						}
+					}
+
+					function aufdecken(x, y)
+					{
+						// felder um felder mit der zahl 0 aufdecken (wenn aufgedeckte felder die zahl 0 haben von diesem feld aus wiederholen)
+
+						var tds = field.getElementsByTagName("td");
+						idx = NX * y + x;
+						var td = tds[idx];
+
+						console.log ( x + " " + y + " " + idx)
+						if (x < 0 || y < 0 || x >= NX || y >= NY) 
+						{
+							return
+						}
+						else
+						{
+							if (td.className != "x" && td.className != "aufgedeckt") 
+							{
+								td.className = "aufgedeckt";
+
+								str = parseInt(td.innerHTML);
+
+								if( str == 0 )
+								{
+									aufdecken(x+1, y);
+									aufdecken(x, y+1);
+									aufdecken(x-1, y);
+									aufdecken(x, y-1);
+									aufdecken(x+1, y+1);
+									aufdecken(x+1, y-1);
+									aufdecken(x-1, y+1);
+									aufdecken(x-1, y-1);			
+									
+
+								}
+							} 
+							else 
+							{
+		//						do_gameover();
+
+							}
+						}
+
+
+
+					}
+
+					function mark (event)
+					{
+						if(gameover) return;
+						console.log("click!");
+						var tds = field.getElementsByTagName("td");
+						
+						var td_clicked = event.target;
+						while(td_clicked.tagName.toLowerCase() != "td" && td_clicked != field)
+						{
+							td_clicked = td_clicked.parentNode;
+						}
+
+						
+						outerloop:
+						for (var y = 0; y < NY; y++)
+						{
+							for (var x = 0; x < NX; x++)
+							{
+								idx = NX * y + x;
+								if( tds[idx] == td_clicked )
+								{
+									aufdecken( x, y );	
+									if (td_clicked.className == "x") 
+									{
+										do_gameover();
+									}
+									break outerloop;
+								}
+							}
+						}
+							
+						
+
+					}
+
+					function rightclick(event)
+					{
+						console.log("rightclick!");
+						
+					}
+
+					var buttons;
+					field.addEventListener("click", mark);
+					field.addEventListener("contextmenu", rightclick);
+
+				}
+		
+				console.log("Platzhalter in Spiel umwandeln")
+				games = document.querySelectorAll(".minesweeper");
+				for (i = 0; i < games.length; i++) 
+				{
+					Minesweeper(games[i]); 
+				}
+				
+			});
+
+	</script>
+</head>
+<body oncontextmenu="return false;">
+<div class="minesweeper">
+</div>
+<div class="restart_button">
+</div>
+</body>
+</html>
